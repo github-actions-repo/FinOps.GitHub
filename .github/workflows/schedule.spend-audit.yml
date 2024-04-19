@@ -1,0 +1,57 @@
+name: Alerting on GitHub Spend
+
+run-name: CRON - Spend Auditing Monitor (Business Hours)
+
+on:
+  schedule:
+    - cron: '0,30 6-19 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  collect-stats:
+    runs-on: ${{ vars.JOBS_RUNNER }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: GitHub Actions Usage Audit
+        id: audit-details
+        uses: mistereechapman/github-actions-usage@v1.0.0
+        with:
+          organisation: github-actions-repo
+          gitHubAPIKey: ${{ secrets.REPOSITORY_ADMIN_PAT }}
+          skipReposWithoutUsage: false
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        id: upload
+        with:
+          name: reports
+          path: |
+            *.csv
+            *.json
+
+      - name: Construct url
+        id: upload_url
+        run: |
+          echo ::set-output name=url::"https://github.com/github-actions-repo/FinOps.GitHub/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload.outputs.artifact-id}}"
+        shell: bash
+        
+      - name: Send Billing data to Slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Actions audit report <${{steps.upload_url.outputs.url}}|produced>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FINOPS_SLACK_CHANNEL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
