@@ -1,4 +1,4 @@
-name: Alerting on GitHub Spend
+name: Alerting on GitHub Spend (Usage)
 
 run-name: CRON - Spend Alerting Monitor (Business Hours)
 
