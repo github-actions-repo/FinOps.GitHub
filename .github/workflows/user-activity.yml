@@ -1,4 +1,4 @@
-name: Manual - Member Contribution Report
+name: Member Contribution Report
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
           todate: ${{ github.event.inputs.todate }} # Used for workflow dispatch input
 
       - run: find reports/ -type f -exec mv {} report.csv \;
-      
+
       - uses: actions/upload-artifact@v4
         with:
           name: membercontributor
